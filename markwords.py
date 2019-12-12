@@ -96,7 +96,7 @@ def GetOneFromN(n_to_one_probabilities, letters):
 
 def main():
   words = LoadWordList(args.dictionary)
-  first_letter_probabilities = MakeFirstLetterProbabilities(words, args.input_width)
+  first_letter_probabilities = MakeFirstLetterProbabilities(words, max(args.input_width-1, 1))
   markov_chains = []
   for chain_length in range(0, args.input_width):
     markov_chains.append(MakeNToOneProbabilities(words, chain_length + 1))
