@@ -10,6 +10,7 @@ parser = argparse.ArgumentParser(description='Generate an album listing.')
 
 parser.add_argument('--dictionary', '-d', metavar='WORDLIST', default='/usr/share/dict/words', type=str, help='The word list to use.')
 parser.add_argument('--word_count', '-w', metavar='NUM', default=1, type=int, help='The number of words to generate.')
+parser.add_argument('--input_width', '-i', metavar='NUM', default=3, type=int, help='The number of letters to use as input for the markov chain.')
 
 args = parser.parse_args()
 
@@ -101,20 +102,20 @@ def GetOneFromN(n_to_one_probabilities, letters):
 def main():
   words = LoadWordList(args.dictionary)
   first_letter_probabilities = MakeFirstLetterProbabilities(words)
-  one_to_one_probabilities = MakeNToOneProbabilities(words, 1)
-  two_to_one_probabilities = MakeNToOneProbabilities(words, 2)
-  three_to_one_probabilities = MakeNToOneProbabilities(words, 3)
+  markov_chains = []
+  for chain_length in range(0, args.input_width):
+    markov_chains.append(MakeNToOneProbabilities(words, chain_length + 1))
   for word_num in range(0, args.word_count):
     word = []
     word.append(GetRandomFirstLetter(first_letter_probabilities))
-    word.append(None)
-    while not word[-1]:
-      word[-1] = GetOneFromN(one_to_one_probabilities, word[0])
-    word.append(None)
-    while not word[-1]:
-      word[-1] = GetOneFromN(two_to_one_probabilities, ''.join(word[0:-1]))
     while True:
-      letter = GetOneFromN(three_to_one_probabilities, ''.join(word[-3:]))
+      if len(word[-args.input_width:]) < args.input_width:
+        word_snippet = ''.join(word[-args.input_width:])
+        letter = None
+        while not letter:
+          letter = GetOneFromN(markov_chains[len(word_snippet)-1], word_snippet)
+      else:
+        letter = GetOneFromN(markov_chains[args.input_width-1], ''.join(word[-args.input_width:]))
       if not letter:
         break
       word.append(letter)
