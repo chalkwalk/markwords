@@ -112,7 +112,10 @@ def main():
       if len(word[-args.input_width:]) < args.input_width:
         word_snippet = ''.join(word[-args.input_width:])
         letter = None
-        while not letter:
+        # iter_count provides a way to stop generating when no viable words exist.
+        iter_count = 0
+        while iter_count < 500 and not letter:
+          iter_count += 1
           letter = GetOneFromN(markov_chains[len(word_snippet)-1], word_snippet)
       else:
         letter = GetOneFromN(markov_chains[args.input_width-1], ''.join(word[-args.input_width:]))
