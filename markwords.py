@@ -27,7 +27,7 @@ def LoadWordList(filename):
   # Load the lines of a file into a list and return it.
   file_path = PathCanonicalize(filename)
   with open(file_path, 'r') as file:
-    words = [word.strip() for word in filter(lambda x:x.strip().isalpha(), file.readlines())]
+    words = [word.strip().lower() for word in filter(lambda x:x.strip().isalpha(), file.readlines())]
     return words
 
 
@@ -105,16 +105,16 @@ def main():
   two_to_one_probabilities = MakeNToOneProbabilities(words, 2)
   three_to_one_probabilities = MakeNToOneProbabilities(words, 3)
   for word_num in range(0, args.word_count):
-    first_letter = GetRandomFirstLetter(first_letter_probabilities)
-    second_letter = None
-    while not second_letter:
-      second_letter = GetOneFromN(one_to_one_probabilities, first_letter)
-    third_letter = None
-    while not third_letter:
-      third_letter = GetOneFromN(two_to_one_probabilities, '%s%s' % (first_letter, second_letter))
-    word = [first_letter, second_letter, third_letter]
+    word = []
+    word.append(GetRandomFirstLetter(first_letter_probabilities))
+    word.append(None)
+    while not word[-1]:
+      word[-1] = GetOneFromN(one_to_one_probabilities, word[0])
+    word.append(None)
+    while not word[-1]:
+      word[-1] = GetOneFromN(two_to_one_probabilities, ''.join(word[0:-1]))
     while True:
-      letter = GetOneFromN(three_to_one_probabilities, '%s%s%s' % (word[-3], word[-2], word[-1]))
+      letter = GetOneFromN(three_to_one_probabilities, ''.join(word[-3:]))
       if not letter:
         break
       word.append(letter)
