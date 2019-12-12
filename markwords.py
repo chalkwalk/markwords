@@ -9,6 +9,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Generate an album listing.')
 
 parser.add_argument('--dictionary', '-d', metavar='WORDLIST', default='/usr/share/dict/words', type=str, help='The word list to use.')
+parser.add_argument('--word_count', '-w', metavar='NUM', default=1, type=int, help='The number of words to generate.')
 
 args = parser.parse_args()
 
@@ -103,20 +104,21 @@ def main():
   one_to_one_probabilities = MakeNToOneProbabilities(words, 1)
   two_to_one_probabilities = MakeNToOneProbabilities(words, 2)
   three_to_one_probabilities = MakeNToOneProbabilities(words, 3)
-  first_letter = GetRandomFirstLetter(first_letter_probabilities)
-  second_letter = None
-  while not second_letter:
-    second_letter = GetOneFromN(one_to_one_probabilities, first_letter)
-  third_letter = None
-  while not third_letter:
-    third_letter = GetOneFromN(two_to_one_probabilities, '%s%s' % (first_letter, second_letter))
-  word = [first_letter, second_letter, third_letter]
-  while True:
-    letter = GetOneFromN(three_to_one_probabilities, '%s%s%s' % (word[-3], word[-2], word[-1]))
-    if not letter:
-      break
-    word.append(letter)
-  print(''.join(word))
+  for word_num in range(0, args.word_count):
+    first_letter = GetRandomFirstLetter(first_letter_probabilities)
+    second_letter = None
+    while not second_letter:
+      second_letter = GetOneFromN(one_to_one_probabilities, first_letter)
+    third_letter = None
+    while not third_letter:
+      third_letter = GetOneFromN(two_to_one_probabilities, '%s%s' % (first_letter, second_letter))
+    word = [first_letter, second_letter, third_letter]
+    while True:
+      letter = GetOneFromN(three_to_one_probabilities, '%s%s%s' % (word[-3], word[-2], word[-1]))
+      if not letter:
+        break
+      word.append(letter)
+    print(''.join(word))
 
 
 if __name__ == '__main__':
