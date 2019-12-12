@@ -32,11 +32,13 @@ def LoadWordList(filename):
     return words
 
 
-def MakeFirstLetterProbabilities(words):
+def MakeFirstLetterProbabilities(words, count=1):
   letter_count = {}
-  total_count = float(len(words))
+  total_count = 0
   for word in words:
-    letter_count[word[0]] = letter_count.setdefault(word[0], 0) + 1
+    if len(word) >= count:
+      total_count += 1
+      letter_count[word[0:count]] = letter_count.setdefault(word[0:count], 0) + 1
   letter_probabilities = []
   cumulative_probability = 0.0
   for letter in sorted(letter_count.keys()):
@@ -68,12 +70,12 @@ def MakeNToOneProbabilities(words, count):
   return letter_probabilities
 
 
-def GetRandomFirstLetter(letter_probabilities):
+def GetRandomFirstLetters(letter_probabilities):
   number = random()
   for letter, cumulative_probability in letter_probabilities:
     if cumulative_probability > number:
       return letter
-  return letter_probabilities[-1][1]
+  return letter_probabilities[-1][0]
 
 
 def GetOneFromN(n_to_one_probabilities, letters):
@@ -81,18 +83,18 @@ def GetOneFromN(n_to_one_probabilities, letters):
   for dest, cumulative_probability in n_to_one_probabilities[letters]:
     if cumulative_probability > number:
       return dest
-  return letter_probabilities[-1][1]
+  return letter_probabilities[-1][0]
 
 
 def main():
   words = LoadWordList(args.dictionary)
-  first_letter_probabilities = MakeFirstLetterProbabilities(words)
+  first_letter_probabilities = MakeFirstLetterProbabilities(words, args.input_width)
   markov_chains = []
   for chain_length in range(0, args.input_width):
     markov_chains.append(MakeNToOneProbabilities(words, chain_length + 1))
   for word_num in range(0, args.word_count):
-    word = []
-    word.append(GetRandomFirstLetter(first_letter_probabilities))
+    first_letters = GetRandomFirstLetters(first_letter_probabilities)
+    word = [x for x in first_letters]
     while True:
       if len(word[-args.input_width:]) < args.input_width:
         word_snippet = ''.join(word[-args.input_width:])
