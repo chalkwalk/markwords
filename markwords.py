@@ -36,10 +36,7 @@ def MakeFirstLetterProbabilities(words):
   letter_count = {}
   total_count = float(len(words))
   for word in words:
-    if word[0] in letter_count:
-      letter_count[word[0]] += 1
-    else:
-      letter_count[word[0]] = 1
+    letter_count[word[0]] = letter_count.setdefault(word[0], 0) + 1
   letter_probabilities = []
   cumulative_probability = 0.0
   for letter in sorted(letter_count.keys()):
@@ -56,23 +53,11 @@ def MakeNToOneProbabilities(words, count):
       source = word[i:i+count]
       dest = word[i+count:i+count+1]
       subword = word[i:i+count+1]
-      if source not in total_count:
-        total_count[source] = 0
-      total_count[source] += 1
-      if source not in letter_count:
-        letter_count[source] = {}
-      if dest not in letter_count[source]:
-        letter_count[source][dest] = 1
-      letter_count[source][dest] += 1
+      total_count[source] = total_count.setdefault(source, 0) + 1
+      letter_count[source][dest] = letter_count.setdefault(source, {}).setdefault(dest, 0) + 1
     terminal = word[len(word)-count:]
-    if terminal not in total_count:
-      total_count[terminal] = 0
-    total_count[terminal] += 1
-    if terminal not in letter_count:
-      letter_count[terminal] = {}
-    if '' not in letter_count[terminal]:
-      letter_count[terminal][''] = 1
-    letter_count[terminal][''] += 1
+    total_count[terminal] = total_count.setdefault(terminal, 0) + 1
+    letter_count[terminal][''] = letter_count.setdefault(terminal, {}).setdefault('', 0) + 1
   letter_probabilities = {}
   for source_letters in letter_count.keys():
     letter_probabilities[source_letters] = []
