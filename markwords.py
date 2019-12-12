@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""A tool to generate random works using markov chains."""
+"""A tool to generate random words using markov chains."""
 
 from random import random
 
@@ -33,6 +33,8 @@ def LoadWordList(filename):
 
 
 def MakeFirstLetterProbabilities(words, count=1):
+  # Given a word list and a prefix count, generate a probability distribution of 'count'
+  # letter prefixes being at the beginning of a word.
   letter_count = {}
   total_count = 0
   for word in words:
@@ -48,6 +50,9 @@ def MakeFirstLetterProbabilities(words, count=1):
 
 
 def MakeNToOneProbabilities(words, count):
+  # Given a word list and a letter count, return a probability dict mapping a 'count'
+  # letter string to a list of tuples containing possible subsequent letters and their
+  # probabilities.
   letter_count = {}
   total_count = {}
   for word in words:
@@ -71,6 +76,7 @@ def MakeNToOneProbabilities(words, count):
 
 
 def GetRandomFirstLetters(letter_probabilities):
+  # Given a probability distribution for initial letters, return a random first letter (or letters).
   number = random()
   for letter, cumulative_probability in letter_probabilities:
     if cumulative_probability > number:
@@ -79,6 +85,8 @@ def GetRandomFirstLetters(letter_probabilities):
 
 
 def GetOneFromN(n_to_one_probabilities, letters):
+  # Given a probability distribution for sequential letters and a string of letters, return a random
+  # letter that might follow the ones provided.
   number = random()
   for dest, cumulative_probability in n_to_one_probabilities[letters]:
     if cumulative_probability > number:
@@ -101,7 +109,7 @@ def main():
         letter = None
         # iter_count provides a way to stop generating when no viable words exist.
         iter_count = 0
-        while iter_count < 500 and not letter:
+        while iter_count < 100 and not letter:
           iter_count += 1
           letter = GetOneFromN(markov_chains[len(word_snippet)-1], word_snippet)
       else:
