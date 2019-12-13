@@ -1,12 +1,12 @@
 #!/usr/bin/python3
-"""A tool to generate random words using markov chains."""
+"""A tool to generate random words using Markov chains."""
 
 from random import random
 
 import os
 import argparse
 
-parser = argparse.ArgumentParser(description='Generate an album listing.')
+parser = argparse.ArgumentParser(description='Generate a random word using Markov chains.')
 
 parser.add_argument('--dictionary', '-d', metavar='WORDLIST', default='/usr/share/dict/words', type=str, help='The word list to use.')
 parser.add_argument('--word_count', '-w', metavar='NUM', default=1, type=int, help='The number of words to generate.')
@@ -25,7 +25,7 @@ def PathCanonicalize(filename):
 
 
 def LoadWordList(filename):
-  # Load the lines of a file into a list and return it.
+  # Load the lines of a file into a list and return it with comments removed.
   file_path = PathCanonicalize(filename)
   with open(file_path, 'r') as file:
     words = [word.strip().lower() for word in filter(lambda x:x.strip().isalpha(), [y.split('#')[0] for y in file.readlines()])]
@@ -33,9 +33,9 @@ def LoadWordList(filename):
 
 
 def WordsAndCountToMarkovChain(words, count):
-  # Given a word list and a letter count, return a probability dict mapping a 'count'
-  # letter string to a list of tuples containing possible subsequent letters and their
-  # probabilities.
+  # Given a word list and a letter count, return a probability dict mapping a
+  # 'count' letter string to a list of tuples containing possible subsequent
+  # letters and their probabilities.
   letter_count = {}
   total_count = {}
   for word in words:
@@ -62,8 +62,8 @@ def WordsAndCountToMarkovChain(words, count):
 
 
 def GetOneFromN(n_to_one_probabilities, letters):
-  # Given a probability distribution for sequential letters and a string of letters, return a random
-  # letter that might follow the ones provided.
+  # Given a probability distribution for sequential letters and a string of
+  # letters, return a random letter that might follow the ones provided.
   number = random()
   for dest, cumulative_probability in n_to_one_probabilities[letters]:
     if cumulative_probability > number:
