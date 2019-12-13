@@ -28,60 +28,37 @@ def LoadWordList(filename):
   # Load the lines of a file into a list and return it.
   file_path = PathCanonicalize(filename)
   with open(file_path, 'r') as file:
-    words = [word.strip().lower() for word in filter(lambda x:x.strip().isalpha(), file.readlines())]
+    words = [word.strip().lower() for word in filter(lambda x:x.strip().isalpha(), [y.split('#')[0] for y in file.readlines()])]
     return words
 
 
-def MakeFirstLetterProbabilities(words, count=1):
-  # Given a word list and a prefix count, generate a probability distribution of 'count'
-  # letter prefixes being at the beginning of a word.
-  letter_count = {}
-  total_count = 0
-  for word in words:
-    if len(word) >= count:
-      total_count += 1
-      letter_count[word[0:count]] = letter_count.setdefault(word[0:count], 0) + 1
-  letter_probabilities = []
-  cumulative_probability = 0.0
-  for letter in sorted(letter_count.keys()):
-    cumulative_probability += letter_count[letter] / total_count
-    letter_probabilities.append((letter, cumulative_probability))
-  return letter_probabilities
-
-
-def MakeNToOneProbabilities(words, count):
+def WordsAndCountToMarkovChain(words, count):
   # Given a word list and a letter count, return a probability dict mapping a 'count'
   # letter string to a list of tuples containing possible subsequent letters and their
   # probabilities.
   letter_count = {}
   total_count = {}
   for word in words:
-    for i in range(0, len(word)-count):
-      source = word[i:i+count]
-      dest = word[i+count:i+count+1]
-      subword = word[i:i+count+1]
+    full_word = word + '#' # We use # to mean 'nothing'
+    for i, letter in enumerate(full_word):
+      first_char_index = i - count
+      subword = ''
+      if first_char_index < 0:
+        subword += '#' * (-first_char_index)
+        first_char_index = 0
+      subword += full_word[first_char_index:i+1]
+      source = subword[0:count]
+      dest = subword[-1]
       total_count[source] = total_count.setdefault(source, 0) + 1
       letter_count[source][dest] = letter_count.setdefault(source, {}).setdefault(dest, 0) + 1
-    terminal = word[len(word)-count:]
-    total_count[terminal] = total_count.setdefault(terminal, 0) + 1
-    letter_count[terminal][''] = letter_count.setdefault(terminal, {}).setdefault('', 0) + 1
-  letter_probabilities = {}
+  markov_chain = {}
   for source_letters in letter_count.keys():
-    letter_probabilities[source_letters] = []
+    markov_chain[source_letters] = []
     cumulative_probability = 0.0
     for dest_letter in sorted(letter_count[source_letters].keys()):
       cumulative_probability += letter_count[source_letters][dest_letter] / total_count[source_letters]
-      letter_probabilities[source_letters].append((dest_letter, cumulative_probability))
-  return letter_probabilities
-
-
-def GetRandomFirstLetters(letter_probabilities):
-  # Given a probability distribution for initial letters, return a random first letter (or letters).
-  number = random()
-  for letter, cumulative_probability in letter_probabilities:
-    if cumulative_probability > number:
-      return letter
-  return letter_probabilities[-1][0]
+      markov_chain[source_letters].append((dest_letter, cumulative_probability))
+  return markov_chain
 
 
 def GetOneFromN(n_to_one_probabilities, letters):
@@ -96,27 +73,16 @@ def GetOneFromN(n_to_one_probabilities, letters):
 
 def main():
   words = LoadWordList(args.dictionary)
-  first_letter_probabilities = MakeFirstLetterProbabilities(words, max(args.input_width-1, 1))
-  markov_chains = []
-  for chain_length in range(0, args.input_width):
-    markov_chains.append(MakeNToOneProbabilities(words, chain_length + 1))
+  markov_chain = WordsAndCountToMarkovChain(words, args.input_width)
   for word_num in range(0, args.word_count):
-    first_letters = GetRandomFirstLetters(first_letter_probabilities)
-    word = [x for x in first_letters]
+    current_string = '#' * args.input_width
+    word = ''
     while True:
-      if len(word[-args.input_width:]) < args.input_width:
-        word_snippet = ''.join(word[-args.input_width:])
-        letter = None
-        # iter_count provides a way to stop generating when no viable words exist.
-        iter_count = 0
-        while iter_count < 100 and not letter:
-          iter_count += 1
-          letter = GetOneFromN(markov_chains[len(word_snippet)-1], word_snippet)
-      else:
-        letter = GetOneFromN(markov_chains[args.input_width-1], ''.join(word[-args.input_width:]))
-      if not letter:
+      letter = GetOneFromN(markov_chain, current_string)
+      if letter == '#':
         break
-      word.append(letter)
+      word += letter
+      current_string = current_string[1:] + letter
     print(''.join(word))
 
 
