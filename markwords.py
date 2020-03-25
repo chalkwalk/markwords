@@ -9,8 +9,9 @@ import argparse
 parser = argparse.ArgumentParser(description='Generate a random word using Markov chains.')
 
 parser.add_argument('--dictionary', '-d', metavar='WORDLIST', default='/usr/share/dict/words', type=str, help='The word list to use.')
-parser.add_argument('--word_count', '-w', metavar='NUM', default=1, type=int, help='The number of words to generate.')
-parser.add_argument('--input_width', '-i', metavar='NUM', default=3, type=int, help='The number of letters to use as input for the markov chain.')
+parser.add_argument('--word_count', '-c', metavar='NUM', default=1, type=int, help='The number of words to generate.')
+parser.add_argument('--input_width', '-w', metavar='NUM', default=3, type=int, help='The number of letters to use as input for the markov chain.')
+parser.add_argument('--initial_prefix', '-p', metavar='PREFIX', default='', type=lambda s: s.lower(), help='The prefix to use for the generated names.')
 
 args = parser.parse_args()
 
@@ -74,9 +75,11 @@ def GetOneFromN(n_to_one_probabilities, letters):
 def main():
   words = LoadWordList(args.dictionary)
   markov_chain = WordsAndCountToMarkovChain(words, args.input_width)
+  initial_string = args.initial_prefix[-args.input_width:]
+  initial_string = '#' * (args.input_width - len(initial_string)) + initial_string
   for word_num in range(0, args.word_count):
-    current_string = '#' * args.input_width
-    word = ''
+    current_string = initial_string
+    word = args.initial_prefix
     while True:
       letter = GetOneFromN(markov_chain, current_string)
       if letter == '#':
